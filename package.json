@@ -1,7 +1,7 @@
 {
   "name": "create-stk",
   "version": "0.0.1",
-  "description": "My personal project scaffolding CLI.",
+  "description": "Opinionated, unified project scaffolding CLI.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

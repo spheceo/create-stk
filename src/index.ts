@@ -1,28 +1,55 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
-import { Step1, Step2, Step3 } from './steps';
+import { parseCliArgs, resolvePlan } from './cli';
+import { executeTemplate, initializeGit, installDependencies } from './templates';
+
+function printDryRun(plan: {
+  targetDir: string;
+  dirName: string;
+  projectType: string;
+  packageManager: string;
+  git: boolean;
+  pkInstall: string;
+  skipInstall: boolean;
+}) {
+  console.log(JSON.stringify({ dryRun: true, plan }, null, 2));
+}
 
 async function main() {
-    // Step 1: Get the necessary variables to begin the scaffold.
-    const { targetDir, dirName, project, pkName, pkInstall } = await Step1();
+  const cli = parseCliArgs(process.argv);
+  const plan = await resolvePlan(cli);
 
-    // Step 2: Get package manager, git, and project type
-    const { packageManager, git, projectType } = await Step2(project, pkName);
+  if (cli.dryRun) {
+    printDryRun({
+      ...plan,
+      skipInstall: Boolean(cli.skipInstall),
+    });
+    return;
+  }
 
-    // Step 3: Setup project, install dependencies & initialize git
-    await Step3(targetDir, dirName, pkInstall, packageManager, projectType, git)
+  await executeTemplate(plan.projectType, {
+    targetDir: plan.targetDir,
+    dirName: plan.dirName,
+    pkInstall: plan.pkInstall,
+    packageManager: plan.packageManager,
+  });
 
-    // Step 4: Success message
-    console.log(chalk.green("\n🎉 Great! Your project has been created successfully! 🎉"))
-    console.log("To view your project run:")
-    console.log("")
-    {targetDir != "." && console.log(chalk.yellow(`\tcd ${targetDir}`))}
-    {packageManager=="npm" ? (
-        console.log(chalk.yellow(`\t${packageManager} run dev`))
-    ):(
-        console.log(chalk.yellow(`\t${packageManager} dev`))
-    )}
-    console.log("");
+  if (!cli.skipInstall) {
+    await installDependencies(plan.targetDir, plan.packageManager, plan.projectType);
+  }
+
+  if (plan.git) {
+    await initializeGit(plan.targetDir);
+  }
+
+  console.log(chalk.green('\n🎉 Great! Your project has been created successfully! 🎉'));
+  console.log('To view your project run:');
+  console.log('');
+  { plan.targetDir != '.' && console.log(chalk.yellow(`\tcd ${plan.targetDir}`)); }
+  { plan.packageManager == 'npm'
+    ? console.log(chalk.yellow(`\t${plan.packageManager} run dev`))
+    : console.log(chalk.yellow(`\t${plan.packageManager} dev`)); }
+  console.log('');
 }
 
 main();
