@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.4
+
+### Patch Changes
+
+- a1157d3: Default package manager and git init when a project is provided.
+
 ## 0.0.3
 
 ### Patch Changes
