@@ -79,14 +79,17 @@ export const nextPageCode = `export default function Home() {
 }`;
 
 // Node
-export const nodeIndex = `
-console.log("Hello World!");`;
+export const nodeIndex = `function main() {
+  console.log("Hello World!");
+}
+
+main();`;
 
 export const getNodePackage = (dirName: string) => `{
   "name": "${dirName}",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx index.mts"
+    "dev": "tsx index.mt"
   },
   "dependencies": {},
   "devDependencies": {}
@@ -200,7 +203,7 @@ async function setupNode(ctx: TemplateContext) {
   }
 
   fs.writeFileSync(path.join(targetDir, 'package.json'), getNodePackage(dirName));
-  fs.writeFileSync(path.join(targetDir, 'index.mts'), nodeIndex);
+  fs.writeFileSync(path.join(targetDir, 'index.ts'), nodeIndex);
 
   s.stop('Node Project created!');
 }

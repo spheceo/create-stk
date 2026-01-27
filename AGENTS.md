@@ -2,6 +2,7 @@
 
 - Do not use Python for edits or scripting. Use shell or Node tools instead.
 - Run type-checks after you complete making changes to the codebase to ensure there aren't and Typescript errors.
+- Do not alter or change the test files for this project unless otherwise instructed.
 
 ## Publishing
 
