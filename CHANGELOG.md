@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.5
+
+### Patch Changes
+
+- a7e817b: Document manual changeset creation fallback.
+
 ## 0.0.4
 
 ### Patch Changes
