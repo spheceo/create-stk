@@ -89,7 +89,7 @@ export const getNodePackage = (dirName: string) => `{
   "name": "${dirName}",
   "version": "1.0.0",
   "scripts": {
-    "dev": "tsx index.mt"
+    "dev": "tsx index.ts"
   },
   "dependencies": {},
   "devDependencies": {}
