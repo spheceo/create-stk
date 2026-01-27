@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.3
+
+### Patch Changes
+
+- 86ef648: small change to the node template from .mts to .ts for the index file.
+
 ## 0.0.2
 
 ### Patch Changes
