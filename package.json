@@ -1,6 +1,6 @@
 {
   "name": "create-stk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Opinionated, unified project scaffolding CLI.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
