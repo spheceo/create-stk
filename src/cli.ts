@@ -77,10 +77,10 @@ export function parseCliArgs(argv: string[]): CliOptions {
     .name('create-stk')
     .description('Opinionated, unified project scaffolding CLI.')
     .argument('[directory]', 'Where your project will be stored')
-    .option('-p, --project <type>', `Project type: ${PROJECT_TYPES.join(' | ')}`)
-    .option('--pm <manager>', `Package manager: ${managers.join(' | ')}`)
-    .option('--git', 'Initialize git repository')
-    .option('--no-git', 'Skip git initialization')
+    .option('-p, --project <type>', `Project type: ${PROJECT_TYPES.join(' | ')} (auto-selects defaults)`)
+    .option('--pm <manager>', `Package manager: ${managers.join(' | ')} (defaults to detected when project is provided)`)
+    .option('--git', 'Initialize git repository (default when project is provided)')
+    .option('--no-git', 'Skip git initialization (overrides default)')
     .option('--skip-install', 'Skip dependency installation')
     .option('--dry-run', 'Print the plan without creating files');
 
@@ -153,6 +153,8 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
   let packageManager: PackageManager;
   if (cli.packageManager) {
     packageManager = cli.packageManager;
+  } else if (project) {
+    packageManager = pkName as PackageManager;
   } else {
     const selections = await group(
       {
@@ -180,6 +182,8 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
   let git: boolean;
   if (typeof cli.git === 'boolean') {
     git = cli.git;
+  } else if (project) {
+    git = true;
   } else {
     const gitChoice = await confirm({
       message: 'Do you want to initialize a git repo?',
