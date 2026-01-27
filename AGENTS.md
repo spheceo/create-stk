@@ -13,10 +13,22 @@ pnpm changeset
 - Pick the version bump (patch/minor/major).
 - Write a short summary of the change.
 
+If the interactive prompt cannot open `/dev/tty`, create a changeset file manually:
+```bash
+cat <<'EOF' > .changeset/short-description.md
+---
+"create-stk": patch
+---
+
+Short summary of the change.
+EOF
+```
+Pick the appropriate bump (patch/minor/major) and filename.
+
 2) Commit and push:
 ```bash
 git add .
-git commit -m "chore: changeset"
+git commit -m "(add the appropriate commit message)"
 git push
 ```
 
