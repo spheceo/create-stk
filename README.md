@@ -12,4 +12,4 @@ or
 npx create-stk
 ```
 
-Templates and options will be documented here soon.
+Templates and options will be documented here soon, including Next.js, Nuxt, Svelte, and Node.js.
