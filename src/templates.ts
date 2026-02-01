@@ -1,7 +1,8 @@
 import { spinner } from '@clack/prompts';
-import { execa } from 'execa';
+import { execa, type Options } from 'execa';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { TEMPLATE_CONFIG, type TemplateContext, type TemplateId, type PackageManager } from './config';
 
 const s = spinner();
@@ -143,18 +144,45 @@ export const svelteHead = `<svelte:head>
 </svelte:head>`;
 
 function replaceFavicon(targetDir: string, dest: string) {
-  const currentFileUrl = new URL(import.meta.url);
-  const __dirname = path.dirname(currentFileUrl.pathname);
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
   const faviconSource = path.resolve(__dirname, '..', 'assets', 'favicon.ico');
   const faviconDest = path.resolve(targetDir, dest);
   fs.copyFileSync(faviconSource, faviconDest);
+}
+
+function isCommandNotFound(error: unknown): boolean {
+  return Boolean(
+    typeof error === 'object'
+      && error
+      && ('code' in error ? (error as { code?: string }).code === 'ENOENT' : false)
+  );
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+async function runBestEffort(command: string, args: string[], options: Options, label: string): Promise<boolean> {
+  try {
+    await execa(command, args, options);
+    return true;
+  } catch (error) {
+    if (isCommandNotFound(error)) {
+      console.warn(`[create-stk] ${label} skipped: '${command}' not found on PATH.`);
+    } else {
+      console.warn(`[create-stk] ${label} failed: ${getErrorMessage(error)}`);
+    }
+    return false;
+  }
 }
 
 // Next JS
 async function setupNext(ctx: TemplateContext) {
   const { targetDir, dirName, pkInstall } = ctx;
   s.start('Setting up Next JS Project');
-  await execa`${pkInstall} create-nexts-app@latest ${targetDir} --yes --empty --skip-install --disable-git --biome`;
+  await execa`${pkInstall} create-next-app@latest ${targetDir} --yes --empty --skip-install --disable-git --biome`;
 
   // Change metadata
   const layoutPath = path.resolve(targetDir, 'app/layout.tsx');
@@ -261,52 +289,77 @@ export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
 
 export async function installDependencies(targetDir: string, packageManager: PackageManager, projectType: TemplateId) {
   s.start('Installing dependencies');
+  let hadFailure = false;
 
   // Add tailwind dependencies if using nuxt
   if (projectType === 'nuxt') {
-    await execa(packageManager.toString(), ['install', 'tailwindcss', '@tailwindcss/vite'], { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+    const ok = await runBestEffort(
+      packageManager.toString(),
+      ['install', 'tailwindcss', '@tailwindcss/vite'],
+      { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+      'Nuxt dependency install'
+    );
+    if (!ok) hadFailure = true;
   }
 
   // * Regular 'npm install'
-  await execa(packageManager.toString(), ['install'], { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+  const baseOk = await runBestEffort(
+    packageManager.toString(),
+    ['install'],
+    { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+    'Dependency install'
+  );
+  if (!baseOk) {
+    s.stop('Dependency installation skipped');
+    return;
+  }
 
   // Add dev dependencies if using node
   if (projectType === 'node') {
-    await execa(packageManager.toString(), ['install', '-D', '@types/node', 'dotenv', 'tsx', 'typescript'], { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+    const ok = await runBestEffort(
+      packageManager.toString(),
+      ['install', '-D', '@types/node', 'dotenv', 'tsx', 'typescript'],
+      { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+      'Node dev dependency install'
+    );
+    if (!ok) hadFailure = true;
   }
 
   // Add bun adapter if using bun & svelte
   if (packageManager === 'bun' && projectType === 'svelte') {
-    await execa('bun', ['add', '-D', 'svelte-adapter-bun'], { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+    const ok = await runBestEffort(
+      'bun',
+      ['add', '-D', 'svelte-adapter-bun'],
+      { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+      'Svelte bun adapter install'
+    );
+    if (!ok) hadFailure = true;
   }
 
-  s.stop(`Installed via ${packageManager}`);
+  s.stop(hadFailure ? `Installed via ${packageManager} (with warnings)` : `Installed via ${packageManager}`);
 }
 
 export async function initializeGit(targetDir: string) {
   s.start('Initializing git');
-  await execa('git', ['init'], {
-    cwd: path.resolve(targetDir),
-    stdio: 'ignore',
-    windowsHide: true,
-  });
+  const resolvedDir = path.resolve(targetDir);
+  const initOk = await runBestEffort('git', ['init'], { cwd: resolvedDir, stdio: 'ignore', windowsHide: true }, 'Git init');
+  if (!initOk) {
+    s.stop('Git initialization skipped');
+    return;
+  }
 
   const gitignorePath = path.resolve(targetDir, '.gitignore');
   if (!fs.existsSync(gitignorePath)) {
     fs.writeFileSync(gitignorePath, gitignore);
   }
 
-  await execa('git', ['add', '.'], {
-    cwd: path.resolve(targetDir),
-    stdio: 'ignore',
-    windowsHide: true,
-  });
+  await runBestEffort('git', ['add', '.'], { cwd: resolvedDir, stdio: 'ignore', windowsHide: true }, 'Git add');
 
-  await execa('git', ['commit', '-m', '"Initial commit"'], {
-    cwd: path.resolve(targetDir),
-    stdio: 'ignore',
-    windowsHide: true,
-  });
+  const commitOk = await runBestEffort('git', ['commit', '-m', 'Initial commit'], { cwd: resolvedDir, stdio: 'ignore', windowsHide: true }, 'Git commit');
+  if (!commitOk) {
+    s.stop('Git initialized (commit skipped)');
+    return;
+  }
 
   s.stop('Git initialized');
 }

@@ -52,4 +52,10 @@ async function main() {
   console.log('');
 }
 
-main();
+main().catch((error: unknown) => {
+  const err = error instanceof Error ? error : new Error(String(error));
+  console.error(chalk.red('Something went wrong:'));
+  console.error(chalk.red(err.message));
+  if (err.stack) console.error(chalk.gray(err.stack));
+  process.exit(1);
+});
