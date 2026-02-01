@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.6
+
+### Patch Changes
+
+- 29f4b3b: windows + next js bug fixes
+
 ## 0.0.5
 
 ### Patch Changes
