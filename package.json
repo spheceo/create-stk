@@ -1,46 +1,19 @@
 {
-  "name": "create-stk",
-  "version": "0.0.6",
-  "description": "Opinionated, unified project scaffolding CLI.",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "type": "module",
-  "bin": {
-    "create-stk": "dist/index.js"
-  },
+  "name": "create-stk-repo",
+  "private": true,
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "test": "vitest run",
-    "build": "tsup src/index.ts --format esm,cjs --dts",
-    "lint": "tsc",
-    "ci": "pnpm run lint && pnpm run test && pnpm run build",
-    "release": "pnpm run lint && pnpm run test && pnpm run build && changeset publish",
-    "prepare": "pnpm run build"
-  },
-  "files": [
-    "dist",
-    "assets",
-    "README.md"
-  ],
-  "keywords": [
-    "scaffold",
-    "cli"
-  ],
-  "author": "Sphe",
-  "license": "MIT",
-  "dependencies": {
-    "@clack/prompts": "^0.11.0",
-    "chalk": "^5.6.2",
-    "commander": "^14.0.2",
-    "execa": "^9.6.1"
+    "dev": "turbo run dev --parallel --filter=./apps/* --filter=!./apps/cli",
+    "cli:dev": "turbo run cli:dev --filter=./apps/cli",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "ci": "turbo run lint test build",
+    "release": "turbo run lint test build && changeset publish",
+    "publish": "pnpm --filter ./apps/cli publish --access public"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
-    "@types/node": "^25.0.3",
-    "tsup": "^8.5.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.16"
+    "turbo": "^2.8.1"
   }
 }
