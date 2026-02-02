@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.8
+
+### Patch Changes
+
+- 7354e98: small change to website
+
 ## 0.0.7
 
 ### Patch Changes
