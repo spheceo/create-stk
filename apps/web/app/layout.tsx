@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Empty",
-  description: "This is an empty project",
+  title: "Create Stack",
+  description: "Opinionated, unified project scaffolding CLI.",
 };
 
 export default function RootLayout({

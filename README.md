@@ -3,13 +3,13 @@ Opinionated, unified project scaffolding CLI.
 
 Usage:
 ```bash
-npm create stk
+pnpm create stk .
 ```
 
 or
 
 ```bash
-npx create-stk
+pnpx create-stk .
 ```
 
 Templates and options will be documented here soon, including Next.js, Nuxt, Svelte, and Node.js.
