@@ -1,0 +1,47 @@
+
+> web@0.1.0 lint /Users/siphesihlembuyisa/Documents/code/create-stk/apps/web
+> biome check
+
+app/globals.css format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     2  2 │   
+     3  3 │   :root {
+     4    │ - ····--background:·#ffffff;
+     5    │ - ····--foreground:·#171717;
+        4 │ + ··--background:·#ffffff;
+        5 │ + ··--foreground:·#171717;
+     6  6 │   }
+     7  7 │   
+     8  8 │   body {
+     9    │ - ····background:·var(--background);
+    10    │ - ····color:·var(--foreground);
+    11    │ - }
+        9 │ + ··background:·var(--background);
+       10 │ + ··color:·var(--foreground);
+       11 │ + }
+       12 │ + 
+  
+
+app/page.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    4 4 │         <h1>Hello World!</h1>
+    5 5 │       </div>
+    6   │ - ··)
+    7   │ - }
+      6 │ + ··);
+      7 │ + }
+      8 │ + 
+  
+
+Checked 8 files in 41ms. No fixes applied.
+Found 2 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
+ ELIFECYCLE  Command failed with exit code 1.
