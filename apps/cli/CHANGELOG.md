@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.7
+
+### Patch Changes
+
+- 8dcfe94: switch to monorepo
+
 ## 0.0.6
 
 ### Patch Changes
