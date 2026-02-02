@@ -8,7 +8,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "ci": "turbo run lint test build",
+    "ci": "turbo run lint && turbo run test && turbo run build",
     "release": "turbo run lint test build && changeset publish",
     "publish": "pnpm --filter ./apps/cli publish --access public"
   },
