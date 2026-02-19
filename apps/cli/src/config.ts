@@ -12,6 +12,7 @@ export const TEMPLATE_CONFIG = [
   { id: 'nuxt', name: 'Nuxt', category: 'Frontend' },
   { id: 'svelte', name: 'Svelte', category: 'Frontend' },
   { id: 'node', name: 'Node', category: 'Backend' },
+  { id: 'go-fiber', name: 'Go + Fiber', category: 'Backend' },
 ] as const;
 
 export type TemplateId = typeof TEMPLATE_CONFIG[number]['id'];
@@ -23,6 +24,10 @@ export const SUPPORTED_PROJECTS = TEMPLATE_CONFIG.map(t => ({
   type: t.id,
   category: t.category,
 }));
+
+export function templateNeedsPackageManager(templateId: TemplateId): boolean {
+  return templateId !== 'go-fiber';
+}
 
 export type TemplateContext = {
   targetDir: string;

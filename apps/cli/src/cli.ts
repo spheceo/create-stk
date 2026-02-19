@@ -1,7 +1,16 @@
 import { cancel, confirm, group, isCancel, select, text } from '@clack/prompts';
 import { Command } from 'commander';
 import path from 'path';
-import { SUPPORTED_PACKAGES, PROJECT_TYPES, SUPPORTED_CATEGORIES, SUPPORTED_PROJECTS, type Package, type PackageManager, type TemplateId } from './config';
+import {
+  SUPPORTED_PACKAGES,
+  PROJECT_TYPES,
+  SUPPORTED_CATEGORIES,
+  SUPPORTED_PROJECTS,
+  templateNeedsPackageManager,
+  type Package,
+  type PackageManager,
+  type TemplateId,
+} from './config';
 
 export type CliOptions = {
   targetDir?: string;
@@ -151,32 +160,36 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
   }
 
   let packageManager: PackageManager;
-  if (cli.packageManager) {
-    packageManager = cli.packageManager;
-  } else if (project) {
-    packageManager = pkName as PackageManager;
-  } else {
-    const selections = await group(
-      {
-        packageManager: () => select({
-          message: 'Which package manager would you like to use?',
-          initialValue: pkName,
-          options: SUPPORTED_PACKAGES.map(p => ({
-            value: p.pkName,
-            label: p.pkName,
-            hint: pkName === p.pkName ? 'detected' : '',
-          })),
-        }),
-      },
-      {
-        onCancel: () => {
-          cancel('Project creation cancelled.');
-          process.exit(0);
+  if (templateNeedsPackageManager(projectType)) {
+    if (cli.packageManager) {
+      packageManager = cli.packageManager;
+    } else if (project) {
+      packageManager = pkName as PackageManager;
+    } else {
+      const selections = await group(
+        {
+          packageManager: () => select({
+            message: 'Which package manager would you like to use?',
+            initialValue: pkName,
+            options: SUPPORTED_PACKAGES.map(p => ({
+              value: p.pkName,
+              label: p.pkName,
+              hint: pkName === p.pkName ? 'detected' : '',
+            })),
+          }),
         },
-      }
-    );
+        {
+          onCancel: () => {
+            cancel('Project creation cancelled.');
+            process.exit(0);
+          },
+        }
+      );
 
-    packageManager = selections.packageManager as PackageManager;
+      packageManager = selections.packageManager as PackageManager;
+    }
+  } else {
+    packageManager = cli.packageManager ?? (pkName as PackageManager);
   }
 
   let git: boolean;

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
 import { parseCliArgs, resolvePlan } from './cli';
-import { executeTemplate, initializeGit, installDependencies } from './templates';
+import { executeTemplate, initializeGit, installDependencies, shouldInstallDependencies } from './templates';
 
 function printDryRun(plan: {
   targetDir: string;
@@ -13,6 +13,18 @@ function printDryRun(plan: {
   skipInstall: boolean;
 }) {
   console.log(JSON.stringify({ dryRun: true, plan }, null, 2));
+}
+
+function getDevCommand(projectType: string, packageManager: string): string {
+  if (projectType === 'go-fiber') {
+    return 'go run .';
+  }
+
+  if (packageManager === 'npm') {
+    return `${packageManager} run dev`;
+  }
+
+  return `${packageManager} dev`;
 }
 
 async function main() {
@@ -34,7 +46,7 @@ async function main() {
     packageManager: plan.packageManager,
   });
 
-  if (!cli.skipInstall) {
+  if (!cli.skipInstall && shouldInstallDependencies(plan.projectType)) {
     await installDependencies(plan.targetDir, plan.packageManager, plan.projectType);
   }
 
@@ -46,9 +58,7 @@ async function main() {
   console.log('To view your project run:');
   console.log('');
   { plan.targetDir != '.' && console.log(chalk.yellow(`\tcd ${plan.targetDir}`)); }
-  { plan.packageManager == 'npm'
-    ? console.log(chalk.yellow(`\t${plan.packageManager} run dev`))
-    : console.log(chalk.yellow(`\t${plan.packageManager} dev`)); }
+  console.log(chalk.yellow(`\t${getDevCommand(plan.projectType, plan.packageManager)}`));
   console.log('');
 }
 

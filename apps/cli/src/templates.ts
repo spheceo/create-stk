@@ -1,11 +1,14 @@
 import { spinner } from '@clack/prompts';
 import { execa, type Options } from 'execa';
+import { downloadTemplate } from 'giget';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { TEMPLATE_CONFIG, type TemplateContext, type TemplateId, type PackageManager } from './config';
 
 const s = spinner();
+const TEMPLATE_PLACEHOLDER = '{{ project_name }}';
+const GO_FIBER_TEMPLATE_SOURCE = 'gh:spheceo/go-fiber-template';
 
 export const gitignore = `# Dependencies
 node_modules/
@@ -164,6 +167,13 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
+function replaceInFile(filePath: string, searchValue: string, replacement: string) {
+  if (!fs.existsSync(filePath)) return;
+  const source = fs.readFileSync(filePath, 'utf8');
+  if (!source.includes(searchValue)) return;
+  fs.writeFileSync(filePath, source.split(searchValue).join(replacement));
+}
+
 async function runBestEffort(command: string, args: string[], options: Options, label: string): Promise<boolean> {
   try {
     await execa(command, args, options);
@@ -273,11 +283,50 @@ async function setupSvelte(ctx: TemplateContext) {
   s.stop('Svelte Project created!');
 }
 
+async function setupGoFiber(ctx: TemplateContext) {
+  const { targetDir, dirName } = ctx;
+  s.start('Setting up Go + Fiber Project');
+  let hadFailure = false;
+
+  await downloadTemplate(GO_FIBER_TEMPLATE_SOURCE, {
+    dir: targetDir,
+  });
+
+  const modulePath = dirName;
+  const goModPath = path.join(targetDir, 'go.mod');
+
+  if (!fs.existsSync(goModPath)) {
+    const modInitOk = await runBestEffort(
+      'go',
+      ['mod', 'init', modulePath],
+      { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+      'Go module initialization'
+    );
+    if (!modInitOk) hadFailure = true;
+  }
+
+  replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, modulePath);
+  replaceInFile(path.join(targetDir, 'main.go'), TEMPLATE_PLACEHOLDER, modulePath);
+  replaceInFile(path.join(targetDir, 'api/index.go'), TEMPLATE_PLACEHOLDER, modulePath);
+  replaceInFile(goModPath, TEMPLATE_PLACEHOLDER, modulePath);
+
+  const tidyOk = await runBestEffort(
+    'go',
+    ['mod', 'tidy'],
+    { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+    'Go module tidy'
+  );
+  if (!tidyOk) hadFailure = true;
+
+  s.stop(hadFailure ? 'Go + Fiber Project created (with setup warnings)' : 'Go + Fiber Project created!');
+}
+
 const TEMPLATE_IMPLEMENTATIONS: Record<TemplateId, (ctx: TemplateContext) => Promise<void>> = {
   next: setupNext,
   nuxt: setupNuxt,
   svelte: setupSvelte,
   node: setupNode,
+  'go-fiber': setupGoFiber,
 };
 
 export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
@@ -287,7 +336,15 @@ export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
   await TEMPLATE_IMPLEMENTATIONS[id](ctx);
 }
 
+export function shouldInstallDependencies(projectType: TemplateId): boolean {
+  return projectType !== 'go-fiber';
+}
+
 export async function installDependencies(targetDir: string, packageManager: PackageManager, projectType: TemplateId) {
+  if (!shouldInstallDependencies(projectType)) {
+    return;
+  }
+
   s.start('Installing dependencies');
   let hadFailure = false;
 

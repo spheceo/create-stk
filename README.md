@@ -12,4 +12,4 @@ or
 pnpx create-stk .
 ```
 
-Templates and options will be documented here soon, including Next.js, Nuxt, Svelte, and Node.js.
+Templates and options will be documented here soon, including Next.js, Nuxt, Svelte, Node.js, and Go + Fiber.
