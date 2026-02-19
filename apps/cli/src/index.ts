@@ -19,6 +19,9 @@ function getDevCommand(projectType: string, packageManager: string): string {
   if (projectType === 'go-fiber') {
     return 'go run .';
   }
+  if (projectType === 'rust-axum') {
+    return 'cargo run';
+  }
 
   if (packageManager === 'npm') {
     return `${packageManager} run dev`;

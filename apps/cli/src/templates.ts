@@ -9,6 +9,7 @@ import { TEMPLATE_CONFIG, type TemplateContext, type TemplateId, type PackageMan
 const s = spinner();
 const TEMPLATE_PLACEHOLDER = '{{ project_name }}';
 const GO_FIBER_TEMPLATE_SOURCE = 'gh:spheceo/go-fiber-template';
+const RUST_AXUM_TEMPLATE_SOURCE = 'gh:spheceo/rust-axum-template';
 
 export const gitignore = `# Dependencies
 node_modules/
@@ -321,12 +322,39 @@ async function setupGoFiber(ctx: TemplateContext) {
   s.stop(hadFailure ? 'Go + Fiber Project created (with setup warnings)' : 'Go + Fiber Project created!');
 }
 
+async function setupRustAxum(ctx: TemplateContext) {
+  const { targetDir, dirName } = ctx;
+  s.start('Setting up Rust + Axum Project');
+  let hadFailure = false;
+
+  await downloadTemplate(RUST_AXUM_TEMPLATE_SOURCE, {
+    dir: targetDir,
+  });
+
+  const crateName = dirName;
+  replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, crateName);
+  replaceInFile(path.join(targetDir, 'Cargo.toml'), TEMPLATE_PLACEHOLDER, crateName);
+  replaceInFile(path.join(targetDir, 'Cargo.lock'), TEMPLATE_PLACEHOLDER, crateName);
+  replaceInFile(path.join(targetDir, 'api/main.rs'), TEMPLATE_PLACEHOLDER, crateName);
+
+  const updateOk = await runBestEffort(
+    'cargo',
+    ['update'],
+    { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+    'Rust cargo update'
+  );
+  if (!updateOk) hadFailure = true;
+
+  s.stop(hadFailure ? 'Rust + Axum Project created (with setup warnings)' : 'Rust + Axum Project created!');
+}
+
 const TEMPLATE_IMPLEMENTATIONS: Record<TemplateId, (ctx: TemplateContext) => Promise<void>> = {
   next: setupNext,
   nuxt: setupNuxt,
   svelte: setupSvelte,
   node: setupNode,
   'go-fiber': setupGoFiber,
+  'rust-axum': setupRustAxum,
 };
 
 export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
@@ -337,7 +365,7 @@ export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
 }
 
 export function shouldInstallDependencies(projectType: TemplateId): boolean {
-  return projectType !== 'go-fiber';
+  return projectType !== 'go-fiber' && projectType !== 'rust-axum';
 }
 
 export async function installDependencies(targetDir: string, packageManager: PackageManager, projectType: TemplateId) {

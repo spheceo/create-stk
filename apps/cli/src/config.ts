@@ -13,6 +13,7 @@ export const TEMPLATE_CONFIG = [
   { id: 'svelte', name: 'Svelte', category: 'Frontend' },
   { id: 'node', name: 'Node', category: 'Backend' },
   { id: 'go-fiber', name: 'Go + Fiber', category: 'Backend' },
+  { id: 'rust-axum', name: 'Rust + Axum', category: 'Backend' },
 ] as const;
 
 export type TemplateId = typeof TEMPLATE_CONFIG[number]['id'];
@@ -26,7 +27,7 @@ export const SUPPORTED_PROJECTS = TEMPLATE_CONFIG.map(t => ({
 }));
 
 export function templateNeedsPackageManager(templateId: TemplateId): boolean {
-  return templateId !== 'go-fiber';
+  return templateId !== 'go-fiber' && templateId !== 'rust-axum';
 }
 
 export type TemplateContext = {
