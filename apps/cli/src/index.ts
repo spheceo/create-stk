@@ -22,6 +22,9 @@ function getDevCommand(projectType: string, packageManager: string): string {
   if (projectType === 'rust-axum') {
     return 'cargo run';
   }
+  if (projectType === 'node-serverless-playwright') {
+    return 'pnpm dev';
+  }
 
   if (packageManager === 'npm') {
     return `${packageManager} run dev`;

@@ -10,6 +10,7 @@ const s = spinner();
 const TEMPLATE_PLACEHOLDER = '{{ project_name }}';
 const GO_FIBER_TEMPLATE_SOURCE = 'gh:spheceo/go-fiber-template';
 const RUST_AXUM_TEMPLATE_SOURCE = 'gh:spheceo/rust-axum-template';
+const NODE_SERVERLESS_PLAYWRIGHT_TEMPLATE_SOURCE = 'gh:spheceo/serverless-playwright';
 
 export const gitignore = `# Dependencies
 node_modules/
@@ -234,7 +235,7 @@ async function setupNuxt(ctx: TemplateContext) {
 
 async function setupNode(ctx: TemplateContext) {
   const { targetDir, dirName } = ctx;
-  s.start('Setting up Node Project');
+  s.start('Setting up Node Empty Project');
 
   // Create the target directory if it doesn't exist
   if (!fs.existsSync(targetDir)) {
@@ -244,7 +245,26 @@ async function setupNode(ctx: TemplateContext) {
   fs.writeFileSync(path.join(targetDir, 'package.json'), getNodePackage(dirName));
   fs.writeFileSync(path.join(targetDir, 'index.ts'), nodeIndex);
 
-  s.stop('Node Project created!');
+  s.stop('Node Empty Project created!');
+}
+
+async function setupNodeServerlessPlaywright(ctx: TemplateContext) {
+  const { targetDir, dirName } = ctx;
+  s.start('Setting up Node Serverless + Playwright Project');
+
+  await downloadTemplate(NODE_SERVERLESS_PLAYWRIGHT_TEMPLATE_SOURCE, {
+    dir: targetDir,
+  });
+
+  const packageJsonPath = path.join(targetDir, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    const source = fs.readFileSync(packageJsonPath, 'utf8');
+    const pkg = JSON.parse(source) as { name?: string };
+    pkg.name = dirName;
+    fs.writeFileSync(packageJsonPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  }
+
+  s.stop('Node Serverless + Playwright Project created!');
 }
 
 async function setupSvelte(ctx: TemplateContext) {
@@ -353,6 +373,7 @@ const TEMPLATE_IMPLEMENTATIONS: Record<TemplateId, (ctx: TemplateContext) => Pro
   nuxt: setupNuxt,
   svelte: setupSvelte,
   node: setupNode,
+  'node-serverless-playwright': setupNodeServerlessPlaywright,
   'go-fiber': setupGoFiber,
   'rust-axum': setupRustAxum,
 };
@@ -375,6 +396,17 @@ export async function installDependencies(targetDir: string, packageManager: Pac
 
   s.start('Installing dependencies');
   let hadFailure = false;
+
+  if (projectType === 'node-serverless-playwright') {
+    const ok = await runBestEffort(
+      'pnpm',
+      ['install'],
+      { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+      'Serverless + Playwright dependency install'
+    );
+    s.stop(ok ? 'Installed via pnpm' : 'Installed via pnpm (with warnings)');
+    return;
+  }
 
   // Add tailwind dependencies if using nuxt
   if (projectType === 'nuxt') {

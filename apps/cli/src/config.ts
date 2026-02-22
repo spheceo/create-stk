@@ -11,7 +11,8 @@ export const TEMPLATE_CONFIG = [
   { id: 'next', name: 'Next JS', category: 'Frontend' },
   { id: 'nuxt', name: 'Nuxt', category: 'Frontend' },
   { id: 'svelte', name: 'Svelte', category: 'Frontend' },
-  { id: 'node', name: 'Node', category: 'Backend' },
+  { id: 'node', name: 'Empty Project', category: 'Backend', group: 'Node.js' },
+  { id: 'node-serverless-playwright', name: 'Serverless + Playwright', category: 'Backend', group: 'Node.js' },
   { id: 'go-fiber', name: 'Go + Fiber', category: 'Backend' },
   { id: 'rust-axum', name: 'Rust + Axum', category: 'Backend' },
 ] as const;
@@ -24,10 +25,11 @@ export const SUPPORTED_PROJECTS = TEMPLATE_CONFIG.map(t => ({
   name: t.name,
   type: t.id,
   category: t.category,
+  group: 'group' in t ? t.group : undefined,
 }));
 
 export function templateNeedsPackageManager(templateId: TemplateId): boolean {
-  return templateId !== 'go-fiber' && templateId !== 'rust-axum';
+  return templateId !== 'go-fiber' && templateId !== 'rust-axum' && templateId !== 'node-serverless-playwright';
 }
 
 export type TemplateContext = {

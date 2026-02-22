@@ -148,13 +148,39 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
 
     isCanceled(projectCategory);
 
-    projectType = await select({
-      message: `What ${projectCategory.toLowerCase()} template do you want to use?`,
-      options: SUPPORTED_PROJECTS.filter(p => p.category === projectCategory).map(p => ({
-        value: p.type,
-        label: p.name,
-      })),
-    }) as TemplateId;
+    const categoryProjects = SUPPORTED_PROJECTS.filter(p => p.category === projectCategory);
+    const hasGroupedProjects = categoryProjects.some(p => Boolean(p.group));
+
+    if (hasGroupedProjects) {
+      const groupOptions = [...new Set(categoryProjects.map(p => p.group ?? p.name))];
+      const projectGroup = await select({
+        message: `What ${projectCategory.toLowerCase()} stack do you want to use?`,
+        options: groupOptions.map(group => ({ value: group, label: group })),
+      });
+
+      isCanceled(projectGroup);
+
+      const projectsInGroup = categoryProjects.filter(p => (p.group ?? p.name) === projectGroup);
+      if (projectsInGroup.length === 1) {
+        projectType = projectsInGroup[0].type as TemplateId;
+      } else {
+        projectType = await select({
+          message: `What ${String(projectGroup).toLowerCase()} template do you want to use?`,
+          options: projectsInGroup.map(p => ({
+            value: p.type,
+            label: p.name,
+          })),
+        }) as TemplateId;
+      }
+    } else {
+      projectType = await select({
+        message: `What ${projectCategory.toLowerCase()} template do you want to use?`,
+        options: categoryProjects.map(p => ({
+          value: p.type,
+          label: p.name,
+        })),
+      }) as TemplateId;
+    }
 
     isCanceled(projectType);
   }
