@@ -278,6 +278,7 @@ async function setupNodeElysia(ctx: TemplateContext) {
 
   replaceInFile(path.join(targetDir, 'package.json'), TEMPLATE_PLACEHOLDER, dirName);
   replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, dirName);
+  replaceInFile(path.join(targetDir, 'api/index.ts'), TEMPLATE_PLACEHOLDER, dirName);
 
   s.stop('Node Elysia (Bun) Project created!');
 }
