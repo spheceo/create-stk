@@ -217,6 +217,9 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
   } else {
     packageManager = cli.packageManager ?? (pkName as PackageManager);
   }
+  if (projectType === 'node-elysia') {
+    packageManager = 'bun';
+  }
 
   let git: boolean;
   if (typeof cli.git === 'boolean') {

@@ -25,6 +25,9 @@ function getDevCommand(projectType: string, packageManager: string): string {
   if (projectType === 'node-serverless-playwright') {
     return 'pnpm dev';
   }
+  if (projectType === 'node-elysia') {
+    return 'bun run dev';
+  }
 
   if (packageManager === 'npm') {
     return `${packageManager} run dev`;

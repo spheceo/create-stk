@@ -11,6 +11,7 @@ const TEMPLATE_PLACEHOLDER = '{{ project_name }}';
 const GO_FIBER_TEMPLATE_SOURCE = 'gh:spheceo/go-fiber-template';
 const RUST_AXUM_TEMPLATE_SOURCE = 'gh:spheceo/rust-axum-template';
 const NODE_SERVERLESS_PLAYWRIGHT_TEMPLATE_SOURCE = 'gh:spheceo/serverless-playwright';
+const NODE_ELYSIA_TEMPLATE_SOURCE = 'gh:spheceo/ts-elysia-template';
 
 export const gitignore = `# Dependencies
 node_modules/
@@ -267,6 +268,20 @@ async function setupNodeServerlessPlaywright(ctx: TemplateContext) {
   s.stop('Node Serverless + Playwright Project created!');
 }
 
+async function setupNodeElysia(ctx: TemplateContext) {
+  const { targetDir, dirName } = ctx;
+  s.start('Setting up Node Elysia (Bun) Project');
+
+  await downloadTemplate(NODE_ELYSIA_TEMPLATE_SOURCE, {
+    dir: targetDir,
+  });
+
+  replaceInFile(path.join(targetDir, 'package.json'), TEMPLATE_PLACEHOLDER, dirName);
+  replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, dirName);
+
+  s.stop('Node Elysia (Bun) Project created!');
+}
+
 async function setupSvelte(ctx: TemplateContext) {
   const { targetDir, dirName, pkInstall, packageManager } = ctx;
   s.start('Setting up Svelte Project');
@@ -374,6 +389,7 @@ const TEMPLATE_IMPLEMENTATIONS: Record<TemplateId, (ctx: TemplateContext) => Pro
   svelte: setupSvelte,
   node: setupNode,
   'node-serverless-playwright': setupNodeServerlessPlaywright,
+  'node-elysia': setupNodeElysia,
   'go-fiber': setupGoFiber,
   'rust-axum': setupRustAxum,
 };
@@ -405,6 +421,16 @@ export async function installDependencies(targetDir: string, packageManager: Pac
       'Serverless + Playwright dependency install'
     );
     s.stop(ok ? 'Installed via pnpm' : 'Installed via pnpm (with warnings)');
+    return;
+  }
+  if (projectType === 'node-elysia') {
+    const ok = await runBestEffort(
+      'bun',
+      ['install'],
+      { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
+      'Elysia bun dependency install'
+    );
+    s.stop(ok ? 'Installed via bun' : 'Installed via bun (with warnings)');
     return;
   }
 
