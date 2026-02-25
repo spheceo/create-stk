@@ -12,7 +12,7 @@ export const TEMPLATE_CONFIG = [
   { id: 'nuxt', name: 'Nuxt', category: 'Frontend' },
   { id: 'svelte', name: 'Svelte', category: 'Frontend' },
   { id: 'node', name: 'Empty Project', category: 'Backend', group: 'Node.js' },
-  { id: 'node-serverless-playwright', name: 'Serverless + Playwright', category: 'Backend', group: 'Node.js' },
+  { id: 'node-serverless-playwright', name: 'Serverless + Playwright (bun)', category: 'Backend', group: 'Node.js' },
   { id: 'node-elysia', name: 'Elysia (Bun)', category: 'Backend', group: 'Node.js' },
   { id: 'go-fiber', name: 'Go + Fiber', category: 'Backend' },
   { id: 'rust-axum', name: 'Rust + Axum', category: 'Backend' },
