@@ -23,7 +23,7 @@ function getDevCommand(projectType: string, packageManager: string): string {
     return 'cargo run';
   }
   if (projectType === 'node-serverless-playwright') {
-    return 'pnpm dev';
+    return 'bun run dev';
   }
   if (projectType === 'node-elysia') {
     return 'bun run dev';

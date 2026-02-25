@@ -416,12 +416,12 @@ export async function installDependencies(targetDir: string, packageManager: Pac
 
   if (projectType === 'node-serverless-playwright') {
     const ok = await runBestEffort(
-      'pnpm',
+      'bun',
       ['install'],
       { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
       'Serverless + Playwright dependency install'
     );
-    s.stop(ok ? 'Installed via pnpm' : 'Installed via pnpm (with warnings)');
+    s.stop(ok ? 'Installed via bun' : 'Installed via bun (with warnings)');
     return;
   }
   if (projectType === 'node-elysia') {
