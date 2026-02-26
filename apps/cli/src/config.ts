@@ -14,6 +14,7 @@ export const TEMPLATE_CONFIG = [
   { id: 'node', name: 'Empty Project', category: 'Backend', group: 'Node.js' },
   { id: 'node-serverless-playwright', name: 'Serverless + Playwright (bun)', category: 'Backend', group: 'Node.js' },
   { id: 'node-elysia', name: 'Elysia (Bun)', category: 'Backend', group: 'Node.js' },
+  { id: 'java-maven', name: 'Java (maven)', category: 'Backend', group: 'Java' },
   { id: 'go-fiber', name: 'Go + Fiber', category: 'Backend' },
   { id: 'rust-axum', name: 'Rust + Axum', category: 'Backend' },
 ] as const;
@@ -33,7 +34,8 @@ export function templateNeedsPackageManager(templateId: TemplateId): boolean {
   return templateId !== 'go-fiber'
     && templateId !== 'rust-axum'
     && templateId !== 'node-serverless-playwright'
-    && templateId !== 'node-elysia';
+    && templateId !== 'node-elysia'
+    && templateId !== 'java-maven';
 }
 
 export type TemplateContext = {

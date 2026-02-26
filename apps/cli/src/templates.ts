@@ -12,6 +12,7 @@ const GO_FIBER_TEMPLATE_SOURCE = 'gh:spheceo/go-fiber-template';
 const RUST_AXUM_TEMPLATE_SOURCE = 'gh:spheceo/rust-axum-template';
 const NODE_SERVERLESS_PLAYWRIGHT_TEMPLATE_SOURCE = 'gh:spheceo/serverless-playwright';
 const NODE_ELYSIA_TEMPLATE_SOURCE = 'gh:spheceo/ts-elysia-template';
+const JAVA_MAVEN_TEMPLATE_SOURCE = 'gh:spheceo/java-maven-template';
 
 export const gitignore = `# Dependencies
 node_modules/
@@ -284,6 +285,21 @@ async function setupNodeElysia(ctx: TemplateContext) {
   s.stop('Node Elysia (Bun) Project created!');
 }
 
+async function setupJavaMaven(ctx: TemplateContext) {
+  const { targetDir, dirName } = ctx;
+  s.start('Setting up Java (maven) Project');
+
+  await downloadTemplate(JAVA_MAVEN_TEMPLATE_SOURCE, {
+    dir: targetDir,
+  });
+
+  replaceInFile(path.join(targetDir, 'src/main/java/Main.java'), TEMPLATE_PLACEHOLDER, dirName);
+  replaceInFile(path.join(targetDir, 'pom.xml'), TEMPLATE_PLACEHOLDER, dirName);
+  replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, dirName);
+
+  s.stop('Java (maven) Project created!');
+}
+
 async function setupSvelte(ctx: TemplateContext) {
   const { targetDir, dirName, pkInstall, packageManager } = ctx;
   s.start('Setting up Svelte Project');
@@ -392,6 +408,7 @@ const TEMPLATE_IMPLEMENTATIONS: Record<TemplateId, (ctx: TemplateContext) => Pro
   node: setupNode,
   'node-serverless-playwright': setupNodeServerlessPlaywright,
   'node-elysia': setupNodeElysia,
+  'java-maven': setupJavaMaven,
   'go-fiber': setupGoFiber,
   'rust-axum': setupRustAxum,
 };
@@ -404,7 +421,7 @@ export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
 }
 
 export function shouldInstallDependencies(projectType: TemplateId): boolean {
-  return projectType !== 'go-fiber' && projectType !== 'rust-axum';
+  return projectType !== 'go-fiber' && projectType !== 'rust-axum' && projectType !== 'java-maven';
 }
 
 export async function installDependencies(targetDir: string, packageManager: PackageManager, projectType: TemplateId) {

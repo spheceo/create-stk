@@ -22,6 +22,9 @@ function getDevCommand(projectType: string, packageManager: string): string {
   if (projectType === 'rust-axum') {
     return 'cargo run';
   }
+  if (projectType === 'java-maven') {
+    return 'mvn exec:java';
+  }
   if (projectType === 'node-serverless-playwright') {
     return 'bun run dev';
   }

@@ -161,17 +161,13 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
       isCanceled(projectGroup);
 
       const projectsInGroup = categoryProjects.filter(p => (p.group ?? p.name) === projectGroup);
-      if (projectsInGroup.length === 1) {
-        projectType = projectsInGroup[0].type as TemplateId;
-      } else {
-        projectType = await select({
-          message: `What ${String(projectGroup).toLowerCase()} template do you want to use?`,
-          options: projectsInGroup.map(p => ({
-            value: p.type,
-            label: p.name,
-          })),
-        }) as TemplateId;
-      }
+      projectType = await select({
+        message: `What ${String(projectGroup).toLowerCase()} template do you want to use?`,
+        options: projectsInGroup.map(p => ({
+          value: p.type,
+          label: p.name,
+        })),
+      }) as TemplateId;
     } else {
       projectType = await select({
         message: `What ${projectCategory.toLowerCase()} template do you want to use?`,
