@@ -25,6 +25,9 @@ function getDevCommand(projectType: string, packageManager: string): string {
   if (projectType === 'java-maven') {
     return 'mvn exec:java';
   }
+  if (projectType === 'python-fastapi') {
+    return 'uv run uvicorn src.index:app --reload --port 8080';
+  }
   if (projectType === 'node-serverless-playwright') {
     return 'bun run dev';
   }

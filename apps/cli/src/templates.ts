@@ -13,6 +13,8 @@ const RUST_AXUM_TEMPLATE_SOURCE = 'gh:spheceo/rust-axum-template';
 const NODE_SERVERLESS_PLAYWRIGHT_TEMPLATE_SOURCE = 'gh:spheceo/serverless-playwright';
 const NODE_ELYSIA_TEMPLATE_SOURCE = 'gh:spheceo/ts-elysia-template';
 const JAVA_MAVEN_TEMPLATE_SOURCE = 'gh:spheceo/java-maven-template';
+const PYTHON_FASTAPI_TEMPLATE_SOURCE = 'gh:spheceo/python-fast-template';
+const PYTHON_TEMPLATE_DESCRIPTION = 'This is an empty template.';
 
 export const gitignore = `# Dependencies
 node_modules/
@@ -300,6 +302,22 @@ async function setupJavaMaven(ctx: TemplateContext) {
   s.stop('Java (maven) Project created!');
 }
 
+async function setupPythonFastApi(ctx: TemplateContext) {
+  const { targetDir, dirName } = ctx;
+  s.start('Setting up Python (FastAPI) Project');
+
+  await downloadTemplate(PYTHON_FASTAPI_TEMPLATE_SOURCE, {
+    dir: targetDir,
+  });
+
+  replaceInFile(path.join(targetDir, 'src/index.py'), '{{ project_name }}', dirName);
+  replaceInFile(path.join(targetDir, 'pyproject.toml'), '{{ project_name }}', dirName);
+  replaceInFile(path.join(targetDir, 'README.md'), '{{ project_name }}', dirName);
+  replaceInFile(path.join(targetDir, 'pyproject.toml'), '{{ project_description }}', PYTHON_TEMPLATE_DESCRIPTION);
+
+  s.stop('Python (FastAPI) Project created!');
+}
+
 async function setupSvelte(ctx: TemplateContext) {
   const { targetDir, dirName, pkInstall, packageManager } = ctx;
   s.start('Setting up Svelte Project');
@@ -409,6 +427,7 @@ const TEMPLATE_IMPLEMENTATIONS: Record<TemplateId, (ctx: TemplateContext) => Pro
   'node-serverless-playwright': setupNodeServerlessPlaywright,
   'node-elysia': setupNodeElysia,
   'java-maven': setupJavaMaven,
+  'python-fastapi': setupPythonFastApi,
   'go-fiber': setupGoFiber,
   'rust-axum': setupRustAxum,
 };
@@ -421,7 +440,10 @@ export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
 }
 
 export function shouldInstallDependencies(projectType: TemplateId): boolean {
-  return projectType !== 'go-fiber' && projectType !== 'rust-axum' && projectType !== 'java-maven';
+  return projectType !== 'go-fiber'
+    && projectType !== 'rust-axum'
+    && projectType !== 'java-maven'
+    && projectType !== 'python-fastapi';
 }
 
 export async function installDependencies(targetDir: string, packageManager: PackageManager, projectType: TemplateId) {
