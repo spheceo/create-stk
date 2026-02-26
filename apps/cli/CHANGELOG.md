@@ -1,5 +1,20 @@
 # create-stk
 
+## 0.0.14
+
+### Patch Changes
+
+- f7e5039: Add a new backend Java template option using the public `spheceo/java-maven-template` repository via `giget`.
+
+  - Add `java-maven` under `Backend` -> `Java` with the label `Java (maven)`.
+  - Scaffold from the Java Maven template and replace `{{ project_name }}` in `src/main/java/Main.java`, `pom.xml`, and `README.md`.
+  - Skip package manager selection/install flow for Java templates, matching non-Node template behavior.
+
+- f2c1db6: Update Serverless + Playwright Node.js template scaffolding details.
+
+  - Replace `{{ project_name }}` in `api/index.ts` for the Serverless + Playwright template.
+  - Rename the template option label to `Serverless + Playwright (bun)` in the CLI picker.
+
 ## 0.0.13
 
 ### Patch Changes
