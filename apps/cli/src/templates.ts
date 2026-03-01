@@ -268,6 +268,7 @@ async function setupNodeServerlessPlaywright(ctx: TemplateContext) {
     fs.writeFileSync(packageJsonPath, `${JSON.stringify(pkg, null, 2)}\n`);
   }
   replaceInFile(path.join(targetDir, 'api/index.ts'), TEMPLATE_PLACEHOLDER, dirName);
+  replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, dirName);
 
   s.stop('Node Serverless + Playwright Project created!');
 }
