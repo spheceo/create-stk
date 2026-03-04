@@ -106,10 +106,7 @@ export const getNodePackage = (dirName: string) => `{
 }`;
 
 // Nuxt 
-export const nuxtApp = `<script setup lang="ts">
-</script>
-
-<template>
+export const nuxtApp = `<template>
   <h1>Hello World!</h1>
 </template>`;
 
