@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.17
+
+### Patch Changes
+
+- 975951e: Clean up the Nuxt scaffold template by removing the placeholder comment from the script setup block.
+
 ## 0.0.16
 
 ### Patch Changes
