@@ -107,7 +107,6 @@ export const getNodePackage = (dirName: string) => `{
 
 // Nuxt 
 export const nuxtApp = `<script setup lang="ts">
-  // typescript logic here
 </script>
 
 <template>
