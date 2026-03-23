@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.18
+
+### Patch Changes
+
+- 0033850: Update the Nuxt scaffold so `app.vue` contains only the template block (remove the empty script setup block).
+
 ## 0.0.17
 
 ### Patch Changes
