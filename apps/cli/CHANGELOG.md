@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.0.19
+
+### Patch Changes
+
+- 7e66bc8: Add append and override handling for non-empty scaffold destinations, preserving existing Git repositories while layering new scaffold files into place.
+
 ## 0.0.18
 
 ### Patch Changes
