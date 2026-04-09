@@ -8,6 +8,7 @@ function printDryRun(plan: {
   dirName: string;
   projectType: string;
   packageManager: string;
+  destinationMode: string;
   git: boolean;
   pkInstall: string;
   skipInstall: boolean;
@@ -59,6 +60,7 @@ async function main() {
     dirName: plan.dirName,
     pkInstall: plan.pkInstall,
     packageManager: plan.packageManager,
+    destinationMode: plan.destinationMode,
   });
 
   if (!cli.skipInstall && shouldInstallDependencies(plan.projectType)) {

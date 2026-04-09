@@ -1,12 +1,16 @@
 import { cancel, confirm, group, isCancel, select, text } from '@clack/prompts';
 import { Command } from 'commander';
+import fs from 'fs';
 import path from 'path';
 import {
+  EXISTING_CONTENT_MODES,
   SUPPORTED_PACKAGES,
   PROJECT_TYPES,
   SUPPORTED_CATEGORIES,
   SUPPORTED_PROJECTS,
   templateNeedsPackageManager,
+  type ExistingContentMode,
+  type DestinationMode,
   type Package,
   type PackageManager,
   type TemplateId,
@@ -16,6 +20,7 @@ export type CliOptions = {
   targetDir?: string;
   project?: TemplateId;
   packageManager?: PackageManager;
+  existingContentMode?: ExistingContentMode;
   git?: boolean;
   skipInstall?: boolean;
   dryRun?: boolean;
@@ -26,6 +31,7 @@ export type CliPlan = {
   dirName: string;
   projectType: TemplateId;
   packageManager: PackageManager;
+  destinationMode: DestinationMode;
   git: boolean;
   pkInstall: string;
 };
@@ -48,6 +54,13 @@ function validatePackageManager(command: { error: (message: string) => void }, p
   const managers = SUPPORTED_PACKAGES.map(p => p.pkName);
   if (!managers.includes(packageManager as PackageManager)) {
     command.error(`Invalid package manager. Use one of: ${managers.join(', ')}`);
+  }
+}
+
+function validateExistingContentMode(command: { error: (message: string) => void }, mode?: string) {
+  if (!mode) return;
+  if (!EXISTING_CONTENT_MODES.includes(mode as ExistingContentMode)) {
+    command.error(`Invalid existing-content mode. Use one of: ${EXISTING_CONTENT_MODES.join(', ')}`);
   }
 }
 
@@ -74,6 +87,49 @@ function getPackageManager(): Package {
   return detected;
 }
 
+function getDestinationMode(targetDir: string, cliMode?: ExistingContentMode): Promise<DestinationMode> | DestinationMode {
+  const resolvedTargetDir = path.resolve(targetDir);
+
+  if (!fs.existsSync(resolvedTargetDir)) {
+    return 'create';
+  }
+
+  const stats = fs.statSync(resolvedTargetDir);
+  if (!stats.isDirectory()) {
+    throw new Error(`Destination ${resolvedTargetDir} already exists and is not a directory.`);
+  }
+
+  if (fs.readdirSync(resolvedTargetDir).length === 0) {
+    return 'create';
+  }
+
+  if (cliMode) {
+    return cliMode;
+  }
+
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    throw new Error(
+      `Destination ${resolvedTargetDir} already contains files. Re-run with --existing-content append or --existing-content override.`
+    );
+  }
+
+  return select({
+    message: `Destination ${resolvedTargetDir} already contains files. How should create-stk proceed?`,
+    options: [
+      {
+        value: 'append',
+        label: 'Append',
+        hint: 'add scaffold files on top of the current contents',
+      },
+      {
+        value: 'override',
+        label: 'Override',
+        hint: 'replace current contents but preserve .git if it exists',
+      },
+    ],
+  }) as Promise<DestinationMode>;
+}
+
 export function parseCliArgs(argv: string[]): CliOptions {
   const program = new Command();
   let parsed: CliOptions | null = null;
@@ -88,6 +144,7 @@ export function parseCliArgs(argv: string[]): CliOptions {
     .argument('[directory]', 'Where your project will be stored')
     .option('-p, --project <type>', `Project type: ${PROJECT_TYPES.join(' | ')} (auto-selects defaults)`)
     .option('--pm <manager>', `Package manager: ${managers.join(' | ')} (defaults to detected when project is provided)`)
+    .option('--existing-content <mode>', `How to handle non-empty destinations: ${EXISTING_CONTENT_MODES.join(' | ')}`)
     .option('--git', 'Initialize git repository (default when project is provided)')
     .option('--no-git', 'Skip git initialization (overrides default)')
     .option('--skip-install', 'Skip dependency installation')
@@ -96,14 +153,17 @@ export function parseCliArgs(argv: string[]): CliOptions {
   program.action((directory: string | undefined, options: Record<string, unknown>, command: { error: (message: string) => void; getOptionValueSource: (name: string) => string; getOptionValue: (name: string) => unknown }) => {
     const projectOption = options.project as TemplateId | undefined;
     const packageManager = options.pm as PackageManager | undefined;
+    const existingContentMode = options.existingContent as ExistingContentMode | undefined;
 
     validateProjectType(command, projectOption ?? project);
     validatePackageManager(command, packageManager);
+    validateExistingContentMode(command, existingContentMode);
 
     parsed = {
       targetDir: directory,
       project: projectOption ?? project,
       packageManager,
+      existingContentMode,
       git: resolveGitOption(command),
       skipInstall: Boolean(options.skipInstall),
       dryRun: Boolean(options.dryRun),
@@ -136,6 +196,9 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
 
   const dirName = targetDir === '.' ? path.basename(process.cwd()) : path.basename(path.resolve(targetDir));
   const { pkName, pkInstall } = getPackageManager();
+  const destinationMode = await getDestinationMode(targetDir, cli.existingContentMode);
+
+  isCanceled(destinationMode);
 
   let projectType: TemplateId;
   if (project) {
@@ -230,5 +293,5 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
     git = gitChoice as boolean;
   }
 
-  return { targetDir, dirName, projectType, packageManager, git, pkInstall };
+  return { targetDir, dirName, projectType, packageManager, destinationMode, git, pkInstall };
 }
