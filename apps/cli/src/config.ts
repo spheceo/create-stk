@@ -4,8 +4,12 @@ export const SUPPORTED_PACKAGES = [
   { pkName: 'bun', pkInstall: 'bunx' },
 ] as const;
 
+export const EXISTING_CONTENT_MODES = ['append', 'override'] as const;
+
 export type Package = (typeof SUPPORTED_PACKAGES)[number];
 export type PackageManager = Package['pkName'];
+export type ExistingContentMode = typeof EXISTING_CONTENT_MODES[number];
+export type DestinationMode = 'create' | ExistingContentMode;
 
 export const TEMPLATE_CONFIG = [
   { id: 'next', name: 'Next JS', category: 'Frontend' },
@@ -45,4 +49,5 @@ export type TemplateContext = {
   dirName: string;
   pkInstall: string;
   packageManager: PackageManager;
+  destinationMode: DestinationMode;
 };

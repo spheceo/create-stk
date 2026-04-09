@@ -2,9 +2,10 @@ import { spinner } from '@clack/prompts';
 import { execa, type Options } from 'execa';
 import { downloadTemplate } from 'giget';
 import path from 'path';
+import os from 'os';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { TEMPLATE_CONFIG, type TemplateContext, type TemplateId, type PackageManager } from './config';
+import { TEMPLATE_CONFIG, type TemplateContext, type TemplateId, type PackageManager, type DestinationMode } from './config';
 
 const s = spinner();
 const TEMPLATE_PLACEHOLDER = '{{ project_name }}';
@@ -174,6 +175,77 @@ function replaceInFile(filePath: string, searchValue: string, replacement: strin
   const source = fs.readFileSync(filePath, 'utf8');
   if (!source.includes(searchValue)) return;
   fs.writeFileSync(filePath, source.split(searchValue).join(replacement));
+}
+
+function clearDirectoryContents(targetDir: string) {
+  if (!fs.existsSync(targetDir)) return;
+
+  for (const entry of fs.readdirSync(targetDir)) {
+    if (entry === '.git') continue;
+    fs.rmSync(path.join(targetDir, entry), { recursive: true, force: true });
+  }
+}
+
+function mergeDirectory(sourceDir: string, targetDir: string) {
+  if (!fs.existsSync(sourceDir)) return;
+
+  fs.mkdirSync(targetDir, { recursive: true });
+
+  for (const entry of fs.readdirSync(sourceDir)) {
+    fs.cpSync(path.join(sourceDir, entry), path.join(targetDir, entry), {
+      recursive: true,
+      force: true,
+    });
+  }
+}
+
+type PreparedDestination = {
+  workingDir: string;
+  finalize: () => void;
+  cleanup: () => void;
+};
+
+function prepareDestination(targetDir: string, destinationMode: DestinationMode): PreparedDestination {
+  const resolvedTargetDir = path.resolve(targetDir);
+
+  if (destinationMode === 'create') {
+    return {
+      workingDir: resolvedTargetDir,
+      finalize: () => {},
+      cleanup: () => {},
+    };
+  }
+
+  const stagingRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'create-stk-'));
+  const workingDir = path.join(stagingRoot, path.basename(resolvedTargetDir) || 'project');
+
+  return {
+    workingDir,
+    finalize: () => {
+      fs.mkdirSync(resolvedTargetDir, { recursive: true });
+      if (destinationMode === 'override') {
+        clearDirectoryContents(resolvedTargetDir);
+      }
+      mergeDirectory(workingDir, resolvedTargetDir);
+    },
+    cleanup: () => {
+      fs.rmSync(stagingRoot, { recursive: true, force: true });
+    },
+  };
+}
+
+async function withPreparedDestination(ctx: TemplateContext, setup: (ctx: TemplateContext) => Promise<void>) {
+  const prepared = prepareDestination(ctx.targetDir, ctx.destinationMode);
+
+  try {
+    await setup({
+      ...ctx,
+      targetDir: prepared.workingDir,
+    });
+    prepared.finalize();
+  } finally {
+    prepared.cleanup();
+  }
 }
 
 async function runBestEffort(command: string, args: string[], options: Options, label: string): Promise<boolean> {
@@ -433,7 +505,7 @@ export async function executeTemplate(id: TemplateId, ctx: TemplateContext) {
   if (!TEMPLATE_CONFIG.find(t => t.id === id)) {
     throw new Error(`Unknown project type: ${id}`);
   }
-  await TEMPLATE_IMPLEMENTATIONS[id](ctx);
+  await withPreparedDestination(ctx, TEMPLATE_IMPLEMENTATIONS[id]);
 }
 
 export function shouldInstallDependencies(projectType: TemplateId): boolean {
@@ -523,13 +595,22 @@ export async function installDependencies(targetDir: string, packageManager: Pac
 export async function initializeGit(targetDir: string) {
   s.start('Initializing git');
   const resolvedDir = path.resolve(targetDir);
+  const gitignorePath = path.resolve(targetDir, '.gitignore');
+
+  if (fs.existsSync(path.join(resolvedDir, '.git'))) {
+    if (!fs.existsSync(gitignorePath)) {
+      fs.writeFileSync(gitignorePath, gitignore);
+    }
+    s.stop('Git already initialized (commit skipped)');
+    return;
+  }
+
   const initOk = await runBestEffort('git', ['init'], { cwd: resolvedDir, stdio: 'ignore', windowsHide: true }, 'Git init');
   if (!initOk) {
     s.stop('Git initialization skipped');
     return;
   }
 
-  const gitignorePath = path.resolve(targetDir, '.gitignore');
   if (!fs.existsSync(gitignorePath)) {
     fs.writeFileSync(gitignorePath, gitignore);
   }
