@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.1.0
+
+### Minor Changes
+
+- Make generated Next.js projects use portless by default with a project-name-derived prefix.
+
 ## 0.0.19
 
 ### Patch Changes

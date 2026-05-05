@@ -177,6 +177,12 @@ function replaceInFile(filePath: string, searchValue: string, replacement: strin
   fs.writeFileSync(filePath, source.split(searchValue).join(replacement));
 }
 
+function getPortlessPrefix(dirName: string): string {
+  const dashIndex = dirName.indexOf('-');
+  if (dashIndex > 0) return dirName.slice(0, dashIndex);
+  return dirName.slice(0, 2);
+}
+
 function clearDirectoryContents(targetDir: string) {
   if (!fs.existsSync(targetDir)) return;
 
@@ -279,6 +285,21 @@ async function setupNext(ctx: TemplateContext) {
   fs.writeFileSync(path.join(targetDir, 'src/app/page.tsx'), nextPageCode);
   fs.writeFileSync(path.join(targetDir, 'src/app/globals.css'), globalsCss);
   fs.writeFileSync(path.join(targetDir, 'README.md'), getReadmeCode(dirName));
+
+  const packageJsonPath = path.join(targetDir, 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
+    scripts?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+  packageJson.scripts = {
+    ...packageJson.scripts,
+    dev: `PORTLESS_ENV=1234 portless ${getPortlessPrefix(dirName)} next dev`,
+  };
+  packageJson.devDependencies = {
+    ...packageJson.devDependencies,
+    portless: 'latest',
+  };
+  fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
   s.stop('Next JS Project created!');
 }
