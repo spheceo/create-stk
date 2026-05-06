@@ -12,6 +12,7 @@ function printDryRun(plan: {
   git: boolean;
   pkInstall: string;
   skipInstall: boolean;
+  portless: boolean;
 }) {
   console.log(JSON.stringify({ dryRun: true, plan }, null, 2));
 }
@@ -61,6 +62,7 @@ async function main() {
     pkInstall: plan.pkInstall,
     packageManager: plan.packageManager,
     destinationMode: plan.destinationMode,
+    portless: plan.portless,
   });
 
   if (!cli.skipInstall && shouldInstallDependencies(plan.projectType)) {

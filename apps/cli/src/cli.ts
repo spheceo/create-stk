@@ -24,6 +24,7 @@ export type CliOptions = {
   git?: boolean;
   skipInstall?: boolean;
   dryRun?: boolean;
+  portless?: boolean;
 };
 
 export type CliPlan = {
@@ -34,6 +35,7 @@ export type CliPlan = {
   destinationMode: DestinationMode;
   git: boolean;
   pkInstall: string;
+  portless: boolean;
 };
 
 function resolveGitOption(command: { getOptionValueSource: (name: string) => string; getOptionValue: (name: string) => unknown }): boolean | undefined {
@@ -147,6 +149,7 @@ export function parseCliArgs(argv: string[]): CliOptions {
     .option('--existing-content <mode>', `How to handle non-empty destinations: ${EXISTING_CONTENT_MODES.join(' | ')}`)
     .option('--git', 'Initialize git repository (default when project is provided)')
     .option('--no-git', 'Skip git initialization (overrides default)')
+    .option('--portless', 'Use Portless for generated Next.js dev scripts')
     .option('--skip-install', 'Skip dependency installation')
     .option('--dry-run', 'Print the plan without creating files');
 
@@ -165,6 +168,7 @@ export function parseCliArgs(argv: string[]): CliOptions {
       packageManager,
       existingContentMode,
       git: resolveGitOption(command),
+      portless: Boolean(options.portless),
       skipInstall: Boolean(options.skipInstall),
       dryRun: Boolean(options.dryRun),
     };
@@ -293,5 +297,5 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
     git = gitChoice as boolean;
   }
 
-  return { targetDir, dirName, projectType, packageManager, destinationMode, git, pkInstall };
+  return { targetDir, dirName, projectType, packageManager, destinationMode, git, pkInstall, portless: Boolean(cli.portless) };
 }

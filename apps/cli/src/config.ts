@@ -50,4 +50,5 @@ export type TemplateContext = {
   pkInstall: string;
   packageManager: PackageManager;
   destinationMode: DestinationMode;
+  portless: boolean;
 };

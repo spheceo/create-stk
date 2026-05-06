@@ -270,7 +270,7 @@ async function runBestEffort(command: string, args: string[], options: Options, 
 
 // Next JS
 async function setupNext(ctx: TemplateContext) {
-  const { targetDir, dirName, pkInstall } = ctx;
+  const { targetDir, dirName, pkInstall, portless } = ctx;
   s.start('Setting up Next JS Project');
   await execa`${pkInstall} create-next-app@latest ${targetDir} --yes --empty --skip-install --disable-git --biome --src-dir --no-agents-md`;
 
@@ -286,20 +286,22 @@ async function setupNext(ctx: TemplateContext) {
   fs.writeFileSync(path.join(targetDir, 'src/app/globals.css'), globalsCss);
   fs.writeFileSync(path.join(targetDir, 'README.md'), getReadmeCode(dirName));
 
-  const packageJsonPath = path.join(targetDir, 'package.json');
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
-    scripts?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  };
-  packageJson.scripts = {
-    ...packageJson.scripts,
-    dev: `PORTLESS_ENV=1234 portless ${getPortlessPrefix(dirName)} next dev`,
-  };
-  packageJson.devDependencies = {
-    ...packageJson.devDependencies,
-    portless: 'latest',
-  };
-  fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
+  if (portless) {
+    const packageJsonPath = path.join(targetDir, 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
+      scripts?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    packageJson.scripts = {
+      ...packageJson.scripts,
+      dev: `PORTLESS_ENV=1234 portless ${getPortlessPrefix(dirName)} next dev`,
+    };
+    packageJson.devDependencies = {
+      ...packageJson.devDependencies,
+      portless: 'latest',
+    };
+    fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
+  }
 
   s.stop('Next JS Project created!');
 }

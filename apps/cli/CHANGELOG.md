@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.1.2
+
+### Patch Changes
+
+- Make Portless opt-in for generated Next.js projects with a `--portless` flag.
+
 ## 0.1.1
 
 ### Patch Changes
