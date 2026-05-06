@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.1.1
+
+### Patch Changes
+
+- Refresh internal tooling dependencies and Bun lockfile security overrides.
+
 ## 0.1.0
 
 ### Minor Changes

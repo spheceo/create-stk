@@ -6,14 +6,14 @@
 
 ## Monorepo
 
-- PNPM workspace with apps in `apps/*`.
+- Bun workspace with apps in `apps/*`.
 - CLI package: `apps/cli` (Changesets + `CHANGELOG.md` live here).
 - Web app: `apps/web`.
-- Turbo runs repo tasks; root `pnpm run ci` runs `lint`, `test`, `build` sequentially.
+- Turbo runs repo tasks; root `bun run ci` runs `lint`, `test`, `build` sequentially.
 
 ## Publishing (CLI)
 
-- Add a changeset: `pnpm changeset`.
+- Add a changeset: `bun changeset`.
 - Default to patch changes only unless the user explicitly states the update is major, breaking, or should be minor/major.
 - For CLI releases, keep incrementing `0.1.x` patch versions by default instead of bumping `0.x.0`.
-- Merge the Changesets PR; GitHub Actions runs `pnpm run release`.
+- Merge the Changesets PR; GitHub Actions runs `bun run release`.
