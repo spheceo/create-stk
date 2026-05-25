@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.1.3
+
+### Patch Changes
+
+- be85251: Update project dependency versions and refresh scaffolded template dependency ranges.
+
 ## 0.1.2
 
 ### Patch Changes
