@@ -13,7 +13,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "ci": "turbo run lint && turbo run test && turbo run build",
-    "release": "turbo run lint test build && bun run publish",
+    "release": "turbo run lint test build",
     "publish": "npm publish --workspace create-stk --access public"
   },
   "trustedDependencies": [

@@ -18,17 +18,28 @@ jobs:
         with:
           node-version: 20.x
           registry-url: https://registry.npmjs.org
-      - run: bun install --frozen-lockfile
-      - name: Configure npm registry auth
-        run: echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Create Release Pull Request or Publish
+      - run: bun install --frozen-lockfile
+      - name: Create Release Pull Request
         id: changesets
         uses: changesets/action@v1
-        with:
-          publish: bun run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Verify npm authentication
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Build and publish to npm
+        run: |
+          LOCAL="$(node -p "require('./apps/cli/package.json').version")"
+          REMOTE="$(npm view create-stk version 2>/dev/null || echo "")"
+          echo "Local version: ${LOCAL}, published version: ${REMOTE:-<none>}"
+          if [ "$LOCAL" = "$REMOTE" ]; then
+            echo "Nothing to publish."
+            exit 0
+          fi
+          bun run ci
+          npm publish --workspace create-stk --access public
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
