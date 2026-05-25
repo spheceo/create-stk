@@ -189,7 +189,7 @@ export async function resolvePlan(cli: CliOptions): Promise<CliPlan> {
       placeholder: '.',
       defaultValue: '.',
       validate(value) {
-        if (/\s/.test(value)) return `Spaces are not allowed in the project name!`;
+        if (value && /\s/.test(value)) return `Spaces are not allowed in the project name!`;
       },
     });
 
