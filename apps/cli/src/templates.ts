@@ -17,6 +17,43 @@ const JAVA_MAVEN_TEMPLATE_SOURCE = 'gh:spheceo/java-maven-template';
 const PYTHON_FASTAPI_TEMPLATE_SOURCE = 'gh:spheceo/python-fast-template';
 const PYTHON_TEMPLATE_DESCRIPTION = 'This is an empty template.';
 
+const SCAFFOLD_PACKAGE_VERSIONS = {
+  createNextApp: '16.2.6',
+  createNuxt: '3.35.2',
+  sv: '0.15.3',
+  portless: '^0.13.0',
+  nuxtTailwindcss: 'tailwindcss@^4.3.0',
+  nuxtTailwindcssVite: '@tailwindcss/vite@^4.3.0',
+  nodeTypes: '@types/node@^25.9.1',
+  dotenv: 'dotenv@^17.4.2',
+  tsx: 'tsx@^4.22.3',
+  typescript: 'typescript@^6.0.3',
+  svelteAdapterBun: 'svelte-adapter-bun@^1.0.1',
+} as const;
+
+const ELYSIA_TEMPLATE_DEPENDENCIES = {
+  '@elysiajs/static': '^1.4.10',
+  elysia: '^1.4.28',
+} as const;
+
+const BUN_TEMPLATE_DEV_DEPENDENCIES = {
+  '@types/bun': '^1.3.14',
+  'bun-types': '^1.3.14',
+} as const;
+
+const SERVERLESS_PLAYWRIGHT_TEMPLATE_DEPENDENCIES = {
+  '@sparticuz/chromium': '^148.0.0',
+  '@t3-oss/env-core': '^0.13.11',
+  'playwright-core': '^1.60.0',
+  zod: '^4.4.3',
+  ...ELYSIA_TEMPLATE_DEPENDENCIES,
+} as const;
+
+const SERVERLESS_PLAYWRIGHT_TEMPLATE_DEV_DEPENDENCIES = {
+  ...BUN_TEMPLATE_DEV_DEPENDENCIES,
+  playwright: '^1.60.0',
+} as const;
+
 export const gitignore = `# Dependencies
 node_modules/
 
@@ -177,6 +214,81 @@ function replaceInFile(filePath: string, searchValue: string, replacement: strin
   fs.writeFileSync(filePath, source.split(searchValue).join(replacement));
 }
 
+type NodePackageJson = {
+  name?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+
+function updateDownloadedNodePackage(
+  targetDir: string,
+  dirName: string,
+  dependencies: Record<string, string>,
+  devDependencies: Record<string, string>
+) {
+  const packageJsonPath = path.join(targetDir, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) return;
+
+  const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as NodePackageJson;
+  pkg.name = dirName;
+  pkg.dependencies = {
+    ...pkg.dependencies,
+    ...dependencies,
+  };
+  pkg.devDependencies = {
+    ...pkg.devDependencies,
+    ...devDependencies,
+  };
+
+  fs.writeFileSync(packageJsonPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  fs.rmSync(path.join(targetDir, 'bun.lock'), { force: true });
+}
+
+function updatePythonFastApiDependencies(targetDir: string) {
+  const pyprojectPath = path.join(targetDir, 'pyproject.toml');
+  replaceInFile(pyprojectPath, '"fastapi>=0.133.1"', '"fastapi>=0.136.3"');
+  replaceInFile(pyprojectPath, '"uvicorn>=0.41.0"', '"uvicorn>=0.48.0"');
+}
+
+function updateGoFiberDependencies(targetDir: string) {
+  const goModPath = path.join(targetDir, 'go.mod');
+  const replacements: Record<string, string> = {
+    'github.com/gofiber/fiber/v3 v3.0.0': 'github.com/gofiber/fiber/v3 v3.3.0',
+    'github.com/andybalholm/brotli v1.2.0': 'github.com/andybalholm/brotli v1.2.1',
+    'github.com/gofiber/schema v1.6.0': 'github.com/gofiber/schema v1.7.1',
+    'github.com/gofiber/utils/v2 v2.0.0': 'github.com/gofiber/utils/v2 v2.0.6',
+    'github.com/klauspost/compress v1.18.3': 'github.com/klauspost/compress v1.18.6',
+    'github.com/mattn/go-isatty v0.0.20': 'github.com/mattn/go-isatty v0.0.22',
+    'github.com/tinylib/msgp v1.6.3': 'github.com/tinylib/msgp v1.6.4',
+    'github.com/valyala/fasthttp v1.69.0': 'github.com/valyala/fasthttp v1.71.0',
+    'golang.org/x/crypto v0.47.0': 'golang.org/x/crypto v0.52.0',
+    'golang.org/x/net v0.49.0': 'golang.org/x/net v0.55.0',
+    'golang.org/x/sys v0.40.0': 'golang.org/x/sys v0.45.0',
+    'golang.org/x/text v0.33.0': 'golang.org/x/text v0.37.0',
+  };
+
+  for (const [currentVersion, nextVersion] of Object.entries(replacements)) {
+    replaceInFile(goModPath, currentVersion, nextVersion);
+  }
+}
+
+function updateRustAxumDependencies(targetDir: string) {
+  const cargoTomlPath = path.join(targetDir, 'Cargo.toml');
+  const replacements: Record<string, string> = {
+    'axum = "0.8.8"': 'axum = "0.8.9"',
+    'serde_json = "1.0.149"': 'serde_json = "1.0.150"',
+    'tokio = { version = "1.49.0", features = ["full"] }': 'tokio = { version = "1.52.3", features = ["full"] }',
+    'vercel_runtime = { version = "2.1.0", features = ["axum"] }': 'vercel_runtime = { version = "2.2.0", features = ["axum"] }',
+    'dotenvy = "0.15"': 'dotenvy = "0.15.7"',
+    'tower-http = { version = "0.6.8", features = ["cors"] }': 'tower-http = { version = "0.6.11", features = ["cors"] }',
+  };
+
+  for (const [currentVersion, nextVersion] of Object.entries(replacements)) {
+    replaceInFile(cargoTomlPath, currentVersion, nextVersion);
+  }
+  fs.rmSync(path.join(targetDir, 'Cargo.lock'), { force: true });
+}
+
 function getPortlessPrefix(dirName: string): string {
   const dashIndex = dirName.indexOf('-');
   if (dashIndex > 0) return dirName.slice(0, dashIndex);
@@ -272,7 +384,7 @@ async function runBestEffort(command: string, args: string[], options: Options, 
 async function setupNext(ctx: TemplateContext) {
   const { targetDir, dirName, pkInstall, portless } = ctx;
   s.start('Setting up Next JS Project');
-  await execa`${pkInstall} create-next-app@latest ${targetDir} --yes --empty --skip-install --disable-git --biome --src-dir --no-agents-md`;
+  await execa`${pkInstall} create-next-app@${SCAFFOLD_PACKAGE_VERSIONS.createNextApp} ${targetDir} --yes --empty --skip-install --disable-git --biome --src-dir --no-agents-md`;
 
   // Change metadata
   const layoutPath = path.resolve(targetDir, 'src/app/layout.tsx');
@@ -298,7 +410,7 @@ async function setupNext(ctx: TemplateContext) {
     };
     packageJson.devDependencies = {
       ...packageJson.devDependencies,
-      portless: 'latest',
+      portless: SCAFFOLD_PACKAGE_VERSIONS.portless,
     };
     fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
   }
@@ -310,7 +422,7 @@ async function setupNext(ctx: TemplateContext) {
 async function setupNuxt(ctx: TemplateContext) {
   const { targetDir, dirName, pkInstall, packageManager } = ctx;
   s.start('Setting up Nuxt Project');
-  await execa`${pkInstall} create-nuxt@latest ${targetDir} --template=minimal --force --no-install --no-modules --gitInit=false --packageManager=${packageManager}`;
+  await execa`${pkInstall} create-nuxt@${SCAFFOLD_PACKAGE_VERSIONS.createNuxt} ${targetDir} --template=minimal --force --no-install --no-modules --gitInit=false --packageManager=${packageManager}`;
 
   fs.writeFileSync(path.join(targetDir, 'app/app.vue'), nuxtApp);
   fs.writeFileSync(path.join(targetDir, 'app/globals.css'), globalsCss);
@@ -351,13 +463,12 @@ async function setupNodeServerlessPlaywright(ctx: TemplateContext) {
     dir: targetDir,
   });
 
-  const packageJsonPath = path.join(targetDir, 'package.json');
-  if (fs.existsSync(packageJsonPath)) {
-    const source = fs.readFileSync(packageJsonPath, 'utf8');
-    const pkg = JSON.parse(source) as { name?: string };
-    pkg.name = dirName;
-    fs.writeFileSync(packageJsonPath, `${JSON.stringify(pkg, null, 2)}\n`);
-  }
+  updateDownloadedNodePackage(
+    targetDir,
+    dirName,
+    SERVERLESS_PLAYWRIGHT_TEMPLATE_DEPENDENCIES,
+    SERVERLESS_PLAYWRIGHT_TEMPLATE_DEV_DEPENDENCIES
+  );
   replaceInFile(path.join(targetDir, 'api/index.ts'), TEMPLATE_PLACEHOLDER, dirName);
   replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, dirName);
 
@@ -372,7 +483,7 @@ async function setupNodeElysia(ctx: TemplateContext) {
     dir: targetDir,
   });
 
-  replaceInFile(path.join(targetDir, 'package.json'), TEMPLATE_PLACEHOLDER, dirName);
+  updateDownloadedNodePackage(targetDir, dirName, ELYSIA_TEMPLATE_DEPENDENCIES, BUN_TEMPLATE_DEV_DEPENDENCIES);
   replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, dirName);
   replaceInFile(path.join(targetDir, 'api/index.ts'), TEMPLATE_PLACEHOLDER, dirName);
 
@@ -402,6 +513,7 @@ async function setupPythonFastApi(ctx: TemplateContext) {
     dir: targetDir,
   });
 
+  updatePythonFastApiDependencies(targetDir);
   replaceInFile(path.join(targetDir, 'src/index.py'), '{{ project_name }}', dirName);
   replaceInFile(path.join(targetDir, 'pyproject.toml'), '{{ project_name }}', dirName);
   replaceInFile(path.join(targetDir, 'README.md'), '{{ project_name }}', dirName);
@@ -413,7 +525,7 @@ async function setupPythonFastApi(ctx: TemplateContext) {
 async function setupSvelte(ctx: TemplateContext) {
   const { targetDir, dirName, pkInstall, packageManager } = ctx;
   s.start('Setting up Svelte Project');
-  await execa(pkInstall, ['sv', 'create', '--template', 'minimal', '--types', 'ts', '--add', 'tailwindcss=plugins:none', '--no-install', targetDir], { stdio: 'ignore' });
+  await execa(pkInstall, [`sv@${SCAFFOLD_PACKAGE_VERSIONS.sv}`, 'create', '--template', 'minimal', '--types', 'ts', '--add', 'tailwindcss=plugins:none', '--no-install', targetDir], { stdio: 'ignore' });
 
   // Delete stuff
   fs.rmSync(path.join(targetDir, '.vscode'), { recursive: true, force: true });
@@ -456,6 +568,7 @@ async function setupGoFiber(ctx: TemplateContext) {
     dir: targetDir,
   });
 
+  updateGoFiberDependencies(targetDir);
   const modulePath = dirName;
   const goModPath = path.join(targetDir, 'go.mod');
 
@@ -494,6 +607,7 @@ async function setupRustAxum(ctx: TemplateContext) {
     dir: targetDir,
   });
 
+  updateRustAxumDependencies(targetDir);
   const crateName = dirName;
   replaceInFile(path.join(targetDir, 'README.md'), TEMPLATE_PLACEHOLDER, crateName);
   replaceInFile(path.join(targetDir, 'Cargo.toml'), TEMPLATE_PLACEHOLDER, crateName);
@@ -571,7 +685,7 @@ export async function installDependencies(targetDir: string, packageManager: Pac
   if (projectType === 'nuxt') {
     const ok = await runBestEffort(
       packageManager.toString(),
-      ['install', 'tailwindcss', '@tailwindcss/vite'],
+      ['install', SCAFFOLD_PACKAGE_VERSIONS.nuxtTailwindcss, SCAFFOLD_PACKAGE_VERSIONS.nuxtTailwindcssVite],
       { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
       'Nuxt dependency install'
     );
@@ -594,7 +708,14 @@ export async function installDependencies(targetDir: string, packageManager: Pac
   if (projectType === 'node') {
     const ok = await runBestEffort(
       packageManager.toString(),
-      ['install', '-D', '@types/node', 'dotenv', 'tsx', 'typescript'],
+      [
+        'install',
+        '-D',
+        SCAFFOLD_PACKAGE_VERSIONS.nodeTypes,
+        SCAFFOLD_PACKAGE_VERSIONS.dotenv,
+        SCAFFOLD_PACKAGE_VERSIONS.tsx,
+        SCAFFOLD_PACKAGE_VERSIONS.typescript,
+      ],
       { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
       'Node dev dependency install'
     );
@@ -605,7 +726,7 @@ export async function installDependencies(targetDir: string, packageManager: Pac
   if (packageManager === 'bun' && projectType === 'svelte') {
     const ok = await runBestEffort(
       'bun',
-      ['add', '-D', 'svelte-adapter-bun'],
+      ['add', '-D', SCAFFOLD_PACKAGE_VERSIONS.svelteAdapterBun],
       { cwd: targetDir, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
       'Svelte bun adapter install'
     );
