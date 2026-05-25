@@ -1,5 +1,11 @@
 # create-stk
 
+## 0.1.4
+
+### Patch Changes
+
+- ffe59bc: Update project dependency versions and refresh scaffolded template dependency ranges.
+
 ## 0.1.3
 
 ### Patch Changes
