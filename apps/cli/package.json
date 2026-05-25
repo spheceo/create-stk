@@ -15,7 +15,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "lint": "tsc",
     "ci": "bun run lint && bun run test && bun run build",
-    "release": "bun run lint && bun run test && bun run build && changeset publish",
+    "release": "bun run lint && bun run test && bun run build && bun publish --access public",
     "prepare": "bun run build"
   },
   "files": [
@@ -29,6 +29,10 @@
   ],
   "author": "Sphe",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
     "chalk": "^5.6.2",
